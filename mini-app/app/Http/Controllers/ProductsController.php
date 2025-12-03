@@ -139,9 +139,13 @@ class ProductsController extends Controller
      * Display a listing of products with low stock.
      */
     public function lowStock()
-    {
-        $lowStockProducts = products::where('stock', '<', 5)->get();
+{
+    $lowStockProducts = Product::where('stock', '<', 5)->get();
 
-        return response()->json($lowStockProducts);
-    }
+    return response()->json([
+        'success' => true,
+        'data' => $lowStockProducts,
+        'count' => $lowStockProducts->count()
+    ]);
+}
 }
