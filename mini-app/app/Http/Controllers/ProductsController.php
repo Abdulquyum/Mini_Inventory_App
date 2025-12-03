@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\products;
 use Illuminate\Http\Request;
+use App\Http\Controllers\ProductsController;
 
 class ProductsController extends Controller
 {
@@ -80,52 +81,45 @@ class ProductsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, products $products)
+    public function update(Request $request, products $product)
     {
-
         try {
-            $product = products::find($products->id);
+            $validated = $request->validate([
+                'price' => 'sometimes|numeric|min:1',
+                'stock' => 'sometimes|integer|min:0',
+            ]);
+            
+            $product->update($validated);
+            
+            $product->refresh();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully',
+                'data' => [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'stock' => $product->stock,
+                ]
+            ], 200);
+            
         } catch (\Exception $e) {
-            return response()->json(['message' => 'An error occurred', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update product',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $validated = $request->validate([
-            'price' => 'sometimes|numeric|min:1',
-            'stock' => 'sometimes|integer|min:0',
-        ]);
-        
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
-
-        $request->price = $product->price;
-        $request->stock = $product->stock;
-
-        $product->update($validated);
-
-        return response()->json([
-            'name'  => $product->name,
-            'price' => $product->price,
-            'stock' => $product->stock,
-        ]);
     }
 
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(products $products)
+    public function destroy(products $product)
     {
         try {
-            $product = products::find($products->id);
-
-            if (!$product) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Product not found'
-                ], 404);
-            }
-
             $product->delete();
 
             return response()->json([
@@ -139,5 +133,15 @@ class ProductsController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Display a listing of products with low stock.
+     */
+    public function lowStock()
+    {
+        $lowStockProducts = products::where('stock', '<', 5)->get();
+
+        return response()->json($lowStockProducts);
     }
 }

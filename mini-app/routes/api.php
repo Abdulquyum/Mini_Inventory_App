@@ -19,10 +19,8 @@ Route::get('/products', [ProductsController::class, 'index']);
 
 Route::get('/products/{product}', [ProductsController::class, 'show']);
 
-Route::put('/products/{product}', [ProductsController::class, 'update']);
+Route::put('/products/{product}', [App\Http\Controllers\ProductsController::class, 'update']);
 
 Route::delete('/products/{product}', [ProductsController::class, 'destroy']);
 
-Route::get('/products/low-stock', function () {
-    return products::where('stock', '<', 10)->get();
-});
+Route::get('/products/low-stock', [ProductsController::class, 'lowStock']);
